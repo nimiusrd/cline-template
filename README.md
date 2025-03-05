@@ -1,28 +1,3 @@
-# Cline Utilization Repository
-
-This repository is designed to help you effectively utilize Cline, an AI assistant for coding tasks.
-
-## Directory Structure
-
-- `src/`: Source code files
-- `docs/`: Documentation
-- `examples/`: Example use cases for Cline
-
-## How to Use This Repository
-
-This repository provides examples and templates for various tasks where Cline can assist you, such as:
-
-1. Code generation
-2. Code explanation
-3. Debugging
-4. Refactoring
-5. UI/UX development
-6. Testing
-
-Check the examples directory for specific use cases.
-
----
-
 # Cline 活用リポジトリ
 
 このリポジトリは、コーディングタスク用のAIアシスタントであるClineを効果的に活用するためのものです。
