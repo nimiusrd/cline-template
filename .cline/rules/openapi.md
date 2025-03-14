@@ -1,3 +1,10 @@
+---
+title: OpenAPI 仕様書の書き方
+description: OpenAPI仕様書の作成方法と標準化されたフォーマット
+category: api
+order: 4
+---
+
 # OpenAPI 仕様書の書き方
 
 - OpenAPI仕様書はYAML形式で記述すること
@@ -53,4 +60,3 @@ components:
       properties:
         message:
           type: string
-```

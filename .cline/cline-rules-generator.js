@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
+const matter = require('gray-matter');
 
 // 現在のディレクトリを取得
 const currentDir = process.cwd();
@@ -30,41 +31,47 @@ async function getRuleFiles() {
 }
 
 /**
- * ファイルの内容を読み取る
+ * ファイルの内容を読み取り、Frontmatterを解析する
  * @param {string} filePath ファイルパス
- * @returns {Promise<string>} ファイルの内容
+ * @returns {Promise<{content: string, data: Object}>} ファイルの内容とFrontmatterデータ
  */
-async function readFile(filePath) {
+async function readFileWithFrontmatter(filePath) {
   try {
-    return await fs.promises.readFile(filePath, 'utf8');
+    const fileContent = await fs.promises.readFile(filePath, 'utf8');
+    const { content, data } = matter(fileContent);
+    return { content, data };
   } catch (error) {
     console.error(`エラー: ${filePath}を読み取れませんでした。`, error.message);
-    return '';
+    return { content: '', data: {} };
   }
 }
 
 /**
  * ユーザーにルールファイルを選択させる
- * @param {string[]} files ルールファイルのリスト
- * @returns {Promise<string[]>} 選択されたファイルのリスト
+ * @param {Array<{file: string, data: Object}>} filesWithMeta ルールファイルとメタデータのリスト
+ * @returns {Promise<Array<{file: string, data: Object}>>} 選択されたファイルとメタデータのリスト
  */
-async function selectRuleFiles(files) {
+async function selectRuleFiles(filesWithMeta) {
   return new Promise((resolve) => {
     console.log('利用可能なルールファイル:');
-    files.forEach((file, index) => {
-      console.log(`${index + 1}. ${file.replace('.md', '')}`);
+    filesWithMeta.forEach((item, index) => {
+      const { file, data } = item;
+      const title = data.title || file.replace('.md', '');
+      const description = data.description ? ` - ${data.description}` : '';
+      const category = data.category ? `[${data.category}]` : '';
+      console.log(`${index + 1}. ${title} ${category}${description}`);
     });
     console.log('すべて選択する場合は "all" と入力してください。');
     console.log('複数選択する場合はカンマ区切りで番号を入力してください（例: 1,3,5）');
 
     rl.question('選択するルールファイルの番号を入力してください: ', (answer) => {
       if (answer.toLowerCase() === 'all') {
-        resolve(files);
+        resolve(filesWithMeta);
       } else {
         const selectedIndices = answer.split(',').map(num => parseInt(num.trim(), 10) - 1);
         const selectedFiles = selectedIndices
-          .filter(index => index >= 0 && index < files.length)
-          .map(index => files[index]);
+          .filter(index => index >= 0 && index < filesWithMeta.length)
+          .map(index => filesWithMeta[index]);
         resolve(selectedFiles);
       }
     });
@@ -73,19 +80,44 @@ async function selectRuleFiles(files) {
 
 /**
  * 選択されたルールファイルの内容を結合して.clinerulesファイルを生成する
- * @param {string[]} selectedFiles 選択されたファイルのリスト
+ * @param {Array<{file: string, data: Object, content: string}>} selectedFiles 選択されたファイルのリスト
  */
 async function generateClinerules(selectedFiles) {
   console.log('選択されたルール:');
-  selectedFiles.forEach(file => console.log(`- ${file}`));
+  selectedFiles.forEach(item => {
+    const title = item.data.title || item.file.replace('.md', '');
+    console.log(`- ${title}`);
+  });
 
   let content = '# プロジェクトガイドライン\n\n';
 
-  for (const file of selectedFiles) {
-    const filePath = path.join(clineDir, file);
-    const fileContent = await readFile(filePath);
-    const contentWithoutTitle = fileContent.split('\n').join('\n');    
-    content += contentWithoutTitle + '\n';
+  // カテゴリごとにルールをグループ化
+  const categorizedRules = {};
+  selectedFiles.forEach(item => {
+    const category = item.data.category || 'uncategorized';
+    if (!categorizedRules[category]) {
+      categorizedRules[category] = [];
+    }
+    categorizedRules[category].push(item);
+  });
+
+  // カテゴリごとにルールを追加
+  for (const [category, rules] of Object.entries(categorizedRules)) {
+    // カテゴリ名を追加（最初の文字を大文字に）
+    const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+    content += `## ${categoryName}\n\n`;
+
+    // orderでソート
+    rules.sort((a, b) => {
+      const orderA = a.data.order || 999;
+      const orderB = b.data.order || 999;
+      return orderA - orderB;
+    });
+
+    // ルールを追加
+    for (const rule of rules) {
+      content += rule.content + '\n\n';
+    }
   }
 
   // .clinerules ファイルに書き込む
@@ -114,7 +146,16 @@ async function main() {
       return;
     }
     
-    const selectedFiles = await selectRuleFiles(files);
+    // ファイルとそのメタデータを取得
+    const filesWithMeta = await Promise.all(
+      files.map(async (file) => {
+        const filePath = path.join(clineDir, file);
+        const { content, data } = await readFileWithFrontmatter(filePath);
+        return { file, data, content };
+      })
+    );
+    
+    const selectedFiles = await selectRuleFiles(filesWithMeta);
     if (selectedFiles.length === 0) {
       console.log('ルールファイルが選択されていません。');
       rl.close();

@@ -1,3 +1,10 @@
+---
+title: コンポーネントの書き方
+description: Reactコンポーネントの実装パターンとベストプラクティス
+category: frontend
+order: 3
+---
+
 # コンポーネントの書き方
 
 以下にコンポーネントの書き方について記述する。
@@ -19,4 +26,3 @@ const MyComponent = ({name, age}: Props): JSX.Element => {
 };
 
 export default MyComponent;
-```

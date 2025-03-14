@@ -1,3 +1,10 @@
+---
+title: ビジネスロジックの書き方
+description: ビジネスロジックの実装方法とテスト方法に関するガイドライン
+category: development
+order: 1
+---
+
 # ビジネスロジックの書き方
 
 以下にビジネスロジックの書き方について記述する。
@@ -41,4 +48,3 @@ describe('getFullName', () => {
     expect(getFullName(user)).toBe('John Smith Doe');
   });
 });
-```
