@@ -1,3 +1,10 @@
+---
+title: "技術要件"
+description: "プロジェクトの技術要件に関するガイドライン"
+category: "development"
+order: 1
+---
+
 # 技術要件
 
 - TypeScriptを使用して開発を行うこと

@@ -2,19 +2,13 @@
 
 const fs = require('fs');
 const path = require('path');
-const readline = require('readline');
+const inquirer = require('inquirer');
 const matter = require('gray-matter');
 
 // 現在のディレクトリを取得
 const currentDir = process.cwd();
 const clineDir = path.join(currentDir, '.cline', 'rules');
 const clinerulesDest = path.join(currentDir, '.clinerules');
-
-// ユーザー入力を処理するためのインターフェース
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
 
 /**
  * rulesディレクトリ内のルールファイルを取得する
@@ -52,30 +46,59 @@ async function readFileWithFrontmatter(filePath) {
  * @returns {Promise<Array<{file: string, data: Object}>>} 選択されたファイルとメタデータのリスト
  */
 async function selectRuleFiles(filesWithMeta) {
-  return new Promise((resolve) => {
-    console.log('利用可能なルールファイル:');
-    filesWithMeta.forEach((item, index) => {
-      const { file, data } = item;
-      const title = data.title || file.replace('.md', '');
-      const description = data.description ? ` - ${data.description}` : '';
-      const category = data.category ? `[${data.category}]` : '';
-      console.log(`${index + 1}. ${title} ${category}${description}`);
-    });
-    console.log('すべて選択する場合は "all" と入力してください。');
-    console.log('複数選択する場合はカンマ区切りで番号を入力してください（例: 1,3,5）');
-
-    rl.question('選択するルールファイルの番号を入力してください: ', (answer) => {
-      if (answer.toLowerCase() === 'all') {
-        resolve(filesWithMeta);
-      } else {
-        const selectedIndices = answer.split(',').map(num => parseInt(num.trim(), 10) - 1);
-        const selectedFiles = selectedIndices
-          .filter(index => index >= 0 && index < filesWithMeta.length)
-          .map(index => filesWithMeta[index]);
-        resolve(selectedFiles);
-      }
-    });
+  // カテゴリごとにファイルをグループ化
+  const categorizedFiles = {};
+  filesWithMeta.forEach((item) => {
+    const { data } = item;
+    const category = data.category || 'uncategorized';
+    if (!categorizedFiles[category]) {
+      categorizedFiles[category] = [];
+    }
+    categorizedFiles[category].push(item);
   });
+
+  // カテゴリごとに選択肢を作成
+  const choices = [];
+  
+  // カテゴリの順序を定義（必要に応じて調整）
+  const categoryOrder = ['development', 'documentation', 'frontend', 'api', 'uncategorized'];
+  
+  // カテゴリごとに選択肢を追加
+  categoryOrder.forEach(category => {
+    if (categorizedFiles[category] && categorizedFiles[category].length > 0) {
+      // カテゴリの見出しを追加（選択不可）
+      choices.push(new inquirer.Separator(`=== ${category.charAt(0).toUpperCase() + category.slice(1)} ===`));
+      
+      // カテゴリ内のファイルを追加
+      categorizedFiles[category].forEach((item, index) => {
+        const { file, data } = item;
+        const title = data.title || file.replace('.md', '');
+        const description = data.description ? ` - ${data.description}` : '';
+        
+        choices.push({
+          name: `${title}${description}`,
+          value: filesWithMeta.indexOf(item), // 元の配列内のインデックスを保持
+          checked: false // デフォルトでは選択されていない
+        });
+      });
+      
+      // カテゴリの区切り線を追加
+      choices.push(new inquirer.Separator(' '));
+    }
+  });
+
+  const { selectedOptions } = await inquirer.prompt([
+    {
+      type: 'checkbox',
+      name: 'selectedOptions',
+      message: '含めるルールファイルを選択してください (<a>ですべて選択):',
+      choices: choices,
+      pageSize: 20 // 表示する選択肢の数
+    }
+  ]);
+
+  // 選択されたインデックスに対応するファイルを返す
+  return selectedOptions.map(index => filesWithMeta[index]);
 }
 
 /**
@@ -83,11 +106,19 @@ async function selectRuleFiles(filesWithMeta) {
  * @param {Array<{file: string, data: Object, content: string}>} selectedFiles 選択されたファイルのリスト
  */
 async function generateClinerules(selectedFiles) {
-  console.log('選択されたルール:');
+  if (selectedFiles.length === 0) {
+    console.log('ルールファイルが選択されていません。');
+    return;
+  }
+
+  console.log('\n選択されたルール:');
   selectedFiles.forEach(item => {
     const title = item.data.title || item.file.replace('.md', '');
     console.log(`- ${title}`);
   });
+
+  // カテゴリを取得
+  const categories = [...new Set(selectedFiles.map(item => item.data.category || 'uncategorized'))];
 
   let content = '# プロジェクトガイドライン\n\n';
 
@@ -101,8 +132,11 @@ async function generateClinerules(selectedFiles) {
     categorizedRules[category].push(item);
   });
 
-  // カテゴリごとにルールを追加
-  for (const [category, rules] of Object.entries(categorizedRules)) {
+  // 選択されたカテゴリ順にルールを追加
+  for (const category of categories) {
+    const rules = categorizedRules[category];
+    if (!rules) continue;
+
     // カテゴリ名を追加（最初の文字を大文字に）
     const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
     content += `## ${categoryName}\n\n`;
@@ -119,16 +153,36 @@ async function generateClinerules(selectedFiles) {
       content += rule.content + '\n\n';
     }
   }
+  
+  console.log('\nカテゴリ構造:');
+  categories.forEach(category => {
+    const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+    const rulesCount = categorizedRules[category].length;
+    console.log(`- ${categoryName} (${rulesCount}件のルール)`);
+  });
+  
+  // 確認プロンプト
+  const { confirm } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'confirm',
+      message: '.clinerules ファイルを生成しますか？',
+      default: true
+    }
+  ]);
+  
+  if (!confirm) {
+    console.log('\n.clinerules ファイルの生成をキャンセルしました。');
+    return;
+  }
 
   // .clinerules ファイルに書き込む
   try {
     await fs.promises.writeFile(clinerulesDest, content);
-    console.log(`.clinerules ファイルが正常に生成されました: ${clinerulesDest}`);
+    console.log(`\n.clinerules ファイルが正常に生成されました: ${clinerulesDest}`);
   } catch (error) {
     console.error('エラー: .clinerules ファイルの生成に失敗しました。', error.message);
   }
-
-  rl.close();
 }
 
 /**
@@ -142,7 +196,6 @@ async function main() {
     const files = await getRuleFiles();
     if (files.length === 0) {
       console.log('ルールファイルが見つかりませんでした。');
-      rl.close();
       return;
     }
     
@@ -156,16 +209,9 @@ async function main() {
     );
     
     const selectedFiles = await selectRuleFiles(filesWithMeta);
-    if (selectedFiles.length === 0) {
-      console.log('ルールファイルが選択されていません。');
-      rl.close();
-      return;
-    }
-    
     await generateClinerules(selectedFiles);
   } catch (error) {
     console.error('予期しないエラーが発生しました:', error);
-    rl.close();
   }
 }
 

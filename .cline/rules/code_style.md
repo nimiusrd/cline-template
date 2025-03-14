@@ -1,3 +1,10 @@
+---
+title: "コードスタイルとパターン"
+description: "コードスタイルとパターンに関するガイドライン"
+category: "development"
+order: 2
+---
+
 # コードスタイルとパターン
 
 - .devcontainerを使用して開発環境を統一すること

@@ -1,3 +1,10 @@
+---
+title: "ESLintの設定"
+description: "ESLintの設定に関するガイドライン"
+category: "frontend"
+order: 2
+---
+
 # ESLintの設定
 
 - TypeScriptのコードに対しては`@typescript-eslint`を使用すること
