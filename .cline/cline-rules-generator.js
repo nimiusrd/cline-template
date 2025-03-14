@@ -84,16 +84,8 @@ async function generateClinerules(selectedFiles) {
   for (const file of selectedFiles) {
     const filePath = path.join(clineDir, file);
     const fileContent = await readFile(filePath);
-    
-    // ファイル名から最初の行（タイトル）を取得
-    const title = file.replace('.md', '');
-    
-    // ファイルの内容から最初の行（# タイトル）を削除
-    const contentWithoutTitle = fileContent.split('\n').slice(1).join('\n');
-    
-    // タイトルを適切な形式で追加
-    content += `## ${title.charAt(0).toUpperCase() + title.slice(1)}\n\n`;
-    content += contentWithoutTitle + '\n\n';
+    const contentWithoutTitle = fileContent.split('\n').join('\n');    
+    content += contentWithoutTitle + '\n';
   }
 
   // .clinerules ファイルに書き込む

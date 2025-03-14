@@ -1,79 +1,6 @@
 # プロジェクトガイドライン
 
-## 技術要件
-
-- TypeScriptを使用して開発を行うこと
-- Next.jsを使用してフロントエンドを開発すること
-- 認証はOIDC準拠のものを使うこと
-- APIに関するものはOpenAPI仕様書から生成すること
-
-## ドキュメント要件
-
-- APIに関するドキュメントはOpenAPI仕様書で記述すること
-- TypeScriptのコードにはJSDocを記述すること
-
-## テスト基準
-
-- ビジネスロジックは純粋な関数として実装し、テストを行うこと
-- テストはVitestを使用して行うこと
-- テストは*.test.tsで記述すること
-- コンポーネントのテストはReact Testing Libraryを使用して行うこと
-
-## コードスタイルとパターン
-
-- .devcontainerを使用して開発環境を統一すること
-- .editorconfigを使用してエディタの設定を統一すること
-- GitHub Actionsを使用してCIを行うこと
-- ESLintを使用してコードスタイルを統一すること
-- Prettierを使用してコードフォーマットを統一すること
-- TypeScriptの型定義は可能な限り具体的に記述すること
-
-### ESLintの設定
-
-- TypeScriptのコードに対しては`@typescript-eslint`を使用すること
-- ルールの設定は`.eslintrc.js`に記述すること
-- ルールの設定は可能な限り厳格にすること
-- ルールはFlatConfigを使用して設定すること
-
-### TypeScriptの型定義
-
-- `any`型の使用を避けること
-- `unknown`型を使用して型安全性を高めること
-- 型ガードを使用して型の安全性を高めること
-- interfaceをできる限り使用すること
-- 型キャストは使用しないこと
-
-### Next.js
-
-- App routerを使用すること
-- ServerComponentを積極的に使用すること
-- Componentをできる限り細かく分割すること
-- ビジネスロジックは使用するコンポーネントの直下にlibディレクトリに分離すること
-
-### コンポーネントの書き方
-
-以下にコンポーネントの書き方について記述する。
-```tsx
-import {JSX} from 'react';
-
-interface Props {
-  name: string;
-  age: number;
-}
-
-const MyComponent = ({name, age}: Props): JSX.Element => {
-  return (
-    <div>
-      <p>{name}</p>
-      <p>{age}</p>
-    </div>
-  );
-};
-
-export default MyComponent;
-```
-
-### ビジネスロジックの書き方
+# ビジネスロジックの書き方
 
 以下にビジネスロジックの書き方について記述する。
 ```ts
@@ -117,8 +44,72 @@ describe('getFullName', () => {
   });
 });
 ```
+# コードスタイルとパターン
 
-### OpenAPI 仕様書の書き方
+- .devcontainerを使用して開発環境を統一すること
+- .editorconfigを使用してエディタの設定を統一すること
+- GitHub Actionsを使用してCIを行うこと
+- ESLintを使用してコードスタイルを統一すること
+- Prettierを使用してコードフォーマットを統一すること
+- TypeScriptの型定義は可能な限り具体的に記述すること
+
+# ドキュメント要件
+
+- APIに関するドキュメントはOpenAPI仕様書で記述すること
+- TypeScriptのコードにはJSDocを記述すること
+
+# コンポーネントの書き方
+
+以下にコンポーネントの書き方について記述する。
+```tsx
+import {JSX} from 'react';
+
+interface Props {
+  name: string;
+  age: number;
+}
+
+const MyComponent = ({name, age}: Props): JSX.Element => {
+  return (
+    <div>
+      <p>{name}</p>
+      <p>{age}</p>
+    </div>
+  );
+};
+
+export default MyComponent;
+```
+# ESLintの設定
+
+- TypeScriptのコードに対しては`@typescript-eslint`を使用すること
+- ルールの設定は`.eslintrc.js`に記述すること
+- ルールの設定は可能な限り厳格にすること
+- ルールはFlatConfigを使用して設定すること
+
+# Next.js
+
+- App routerを使用すること
+- ServerComponentを積極的に使用すること
+- Componentをできる限り細かく分割すること
+- ビジネスロジックは使用するコンポーネントの直下にlibディレクトリに分離すること
+
+# テスト基準
+
+- ビジネスロジックは純粋な関数として実装し、テストを行うこと
+- テストはVitestを使用して行うこと
+- テストは*.test.tsで記述すること
+- コンポーネントのテストはReact Testing Libraryを使用して行うこと
+
+# TypeScriptの型定義
+
+- `any`型の使用を避けること
+- `unknown`型を使用して型安全性を高めること
+- 型ガードを使用して型の安全性を高めること
+- interfaceをできる限り使用すること
+- 型キャストは使用しないこと
+
+# OpenAPI 仕様書の書き方
 
 - OpenAPI仕様書はYAML形式で記述すること
 - Componentsを使用してスキーマを定義すること
@@ -174,3 +165,10 @@ components:
         message:
           type: string
 ```
+# 技術要件
+
+- TypeScriptを使用して開発を行うこと
+- Next.jsを使用してフロントエンドを開発すること
+- 認証はOIDC準拠のものを使うこと
+- APIに関するものはOpenAPI仕様書から生成すること
+
