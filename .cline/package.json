@@ -5,8 +5,7 @@
   "main": "cline-rules-generator.js",
   "scripts": {
     "build": "tsc",
-    "start": "node cline-rules-generator.js",
-    "dev": "ts-node cline-rules-generator.ts"
+    "start": "ts-node cline-rules-generator.ts"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",

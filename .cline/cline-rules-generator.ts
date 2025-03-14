@@ -166,14 +166,6 @@ async function generateClinerules(selectedFiles: FileWithMeta[]): Promise<void> 
       content += rule.content + '\n\n';
     }
   }
-
-  // 生成内容の確認
-  console.log('\n生成される.clinerules ファイルのプレビュー:');
-  console.log('----------------------------------------');
-  
-  // プレビューを表示（最初の500文字とカテゴリ構造）
-  const preview = content.length > 500 ? content.substring(0, 500) + '...' : content;
-  console.log(preview);
   
   console.log('\nカテゴリ構造:');
   categories.forEach(category => {
