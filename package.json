@@ -2,5 +2,8 @@
   "dependencies": {
     "gray-matter": "^4.0.3",
     "inquirer": "^8.2.6"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
   }
 }
